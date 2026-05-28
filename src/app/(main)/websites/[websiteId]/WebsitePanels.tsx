@@ -49,10 +49,14 @@ export function WebsitePanels({ websiteId }: { websiteId: string }) {
           <Tabs>
             <TabList>
               <Tab id="referrer">{t(labels.referrers)}</Tab>
+              <Tab id="referrerUrl">{t(labels.referrerUrl)}</Tab>
               <Tab id="channel">{t(labels.channels)}</Tab>
             </TabList>
             <TabPanel id="referrer">
               <MetricsTable type="referrer" title={t(labels.referrer)} {...tableProps} />
+            </TabPanel>
+            <TabPanel id="referrerUrl">
+              <MetricsTable type="referrerUrl" title={t(labels.referrerUrl)} {...tableProps} />
             </TabPanel>
             <TabPanel id="channel">
               <MetricsTable type="channel" title={t(labels.channel)} {...tableProps} />

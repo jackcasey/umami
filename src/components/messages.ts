@@ -96,6 +96,7 @@ export const labels: Record<string, string> = {
   entry: 'label.entry',
   exit: 'label.exit',
   referrers: 'label.referrers',
+  referrerUrl: 'label.referrer-url',
   screen: 'label.screen',
   screens: 'label.screens',
   browsers: 'label.browsers',
