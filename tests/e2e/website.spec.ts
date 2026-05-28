@@ -1,7 +1,34 @@
 import { expect, test } from '@playwright/test';
-import { addWebsite, deleteWebsite, loginPage } from './helpers';
+import { uuid } from '../../src/lib/crypto';
+import { addWebsite, authHeaders, deleteWebsite, loginPage, umamiUser } from './helpers';
 
 test.describe('Website tests', () => {
+  test('shows the Referrer URL metric tab on the dashboard', async ({ page, request }) => {
+    const auth = await loginPage(page, request);
+    const websiteId = uuid();
+
+    const response = await request.post('/api/websites', {
+      headers: authHeaders(auth),
+      data: {
+        id: websiteId,
+        createdBy: umamiUser.id,
+        name: 'Referrer URL test',
+        domain: 'refurl.com',
+      },
+    });
+    expect(response.status()).toBe(200);
+
+    await page.goto(`/websites/${websiteId}`);
+
+    const tab = page.getByRole('tab', { name: 'Referrer URL' });
+    await expect(tab).toBeVisible();
+
+    await tab.click();
+    await expect(tab).toHaveAttribute('aria-selected', 'true');
+
+    await deleteWebsite(request, auth, websiteId);
+  });
+
   test('adds a website', async ({ page, request }) => {
     const auth = await loginPage(page, request);
 
