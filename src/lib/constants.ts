@@ -41,6 +41,7 @@ export const EVENT_COLUMNS = [
   'entry',
   'exit',
   'referrer',
+  'referrerUrl',
   'domain',
   'title',
   'query',
