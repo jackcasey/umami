@@ -89,6 +89,12 @@ export function WebsiteExpandedMenu({
           icon: <Share2 />,
         },
         {
+          id: 'referrerUrl',
+          label: t(labels.referrerUrl),
+          path: updateParams({ view: 'referrerUrl' }),
+          icon: <Link2 />,
+        },
+        {
           id: 'channel',
           label: t(labels.channel),
           path: updateParams({ view: 'channel' }),

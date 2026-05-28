@@ -37,6 +37,9 @@ async function relationalQuery(
 ): Promise<PageviewExpandedMetricsData[]> {
   const { type, limit = 500, offset = 0 } = parameters;
   let column = FILTER_COLUMNS[type] || type;
+  if (type === 'referrerUrl') {
+    column = 'referrer_domain';
+  }
   const { rawQuery, parseFilters, getTimestampDiffSQL } = prisma;
   const { filterQuery, joinSessionQuery, cohortQuery, excludeBounceQuery, queryParams } =
     parseFilters(
@@ -76,6 +79,11 @@ async function relationalQuery(
     `;
   }
 
+  const nameColumn =
+    type === 'referrerUrl'
+      ? `case when website_event.referrer_query != '' then website_event.referrer_domain || website_event.referrer_path || '?' || website_event.referrer_query else website_event.referrer_domain || website_event.referrer_path end`
+      : column;
+
   return rawQuery(
     `
     select
@@ -87,7 +95,7 @@ async function relationalQuery(
       sum(${getTimestampDiffSQL('t.min_time', 't.max_time')}) as "totaltime"
     from (
       select
-        ${column} as "name",
+        ${nameColumn} as "name",
         website_event.session_id,
         website_event.visit_id,
         count(*) as "c",
@@ -103,7 +111,7 @@ async function relationalQuery(
       and website_event.event_type NOT IN (2, 5)
         ${excludeDomain}
         ${filterQuery}
-      group by ${column}, website_event.session_id, website_event.visit_id
+      group by ${nameColumn}, website_event.session_id, website_event.visit_id
     ) as t
     where name != ''
     group by name 
@@ -123,6 +131,9 @@ async function clickhouseQuery(
 ): Promise<{ x: string; y: number }[]> {
   const { type, limit = 500, offset = 0 } = parameters;
   let column = FILTER_COLUMNS[type] || type;
+  if (type === 'referrerUrl') {
+    column = 'referrer_domain';
+  }
   const { rawQuery, parseFilters } = clickhouse;
   const { filterQuery, cohortQuery, excludeBounceQuery, queryParams } = parseFilters({
     ...filters,
@@ -154,6 +165,11 @@ async function clickhouseQuery(
       ON x.visit_id = website_event.visit_id`;
   }
 
+  let nameColumn = column;
+  if (type === 'referrerUrl') {
+    nameColumn = `if(referrer_query != '', concat(referrer_domain, referrer_path, '?', referrer_query), concat(referrer_domain, referrer_path))`;
+  }
+
   return rawQuery(
     `
     select
@@ -165,7 +181,7 @@ async function clickhouseQuery(
       sum(max_time-min_time) as "totaltime"
     from (
       select
-        ${column} name,
+        ${nameColumn} name,
         session_id,
         visit_id,
         count(*) c,

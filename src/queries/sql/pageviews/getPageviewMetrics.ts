@@ -33,6 +33,9 @@ async function relationalQuery(
 ): Promise<PageviewMetricsData[]> {
   const { type, limit = 500, offset = 0 } = parameters;
   let column = FILTER_COLUMNS[type] || type;
+  if (type === 'referrerUrl') {
+    column = 'referrer_domain';
+  }
   const { rawQuery, parseFilters } = prisma;
   const { filterQuery, joinSessionQuery, cohortQuery, excludeBounceQuery, queryParams } =
     parseFilters(
@@ -70,9 +73,14 @@ async function relationalQuery(
     `;
   }
 
+  const selectColumn =
+    type === 'referrerUrl'
+      ? `case when website_event.referrer_query != '' then website_event.referrer_domain || website_event.referrer_path || '?' || website_event.referrer_query else website_event.referrer_domain || website_event.referrer_path end`
+      : column;
+
   return rawQuery(
     `
-    select ${column} x,
+    select ${selectColumn} x,
       count(distinct website_event.session_id) as y
     from website_event
     ${cohortQuery}
@@ -102,6 +110,9 @@ async function clickhouseQuery(
 ): Promise<{ x: string; y: number }[]> {
   const { type, limit = 500, offset = 0 } = parameters;
   let column = FILTER_COLUMNS[type] || type;
+  if (type === 'referrerUrl') {
+    column = 'referrer_domain';
+  }
   const { rawQuery, parseFilters } = clickhouse;
   const { filterQuery, cohortQuery, excludeBounceQuery, queryParams } = parseFilters({
     ...filters,
@@ -111,7 +122,7 @@ async function clickhouseQuery(
   let sql = '';
   let excludeDomain = '';
 
-  if (EVENT_COLUMNS.some(item => Object.keys(filters).includes(item))) {
+  if (type === 'referrerUrl' || EVENT_COLUMNS.some(item => Object.keys(filters).includes(item))) {
     let entryExitQuery = '';
 
     if (column === 'referrer_domain') {
@@ -133,8 +144,13 @@ async function clickhouseQuery(
       ON x.visit_id = website_event.visit_id`;
     }
 
+    let selectColumn = column;
+    if (type === 'referrerUrl') {
+      selectColumn = `if(referrer_query != '', concat(referrer_domain, referrer_path, '?', referrer_query), concat(referrer_domain, referrer_path))`;
+    }
+
     sql = `
-    select ${column} x, 
+    select ${selectColumn} x,
       uniq(website_event.session_id) as y
     from website_event
     ${cohortQuery}

@@ -94,6 +94,9 @@ export function MetricLabel({ type, data }: MetricLabelProps) {
         />
       );
 
+    case 'referrerUrl':
+      return label || `(${t(labels.none)})`;
+
     case 'device':
       return (
         <FilterLink

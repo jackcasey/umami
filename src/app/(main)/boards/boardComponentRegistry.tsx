@@ -54,6 +54,7 @@ const METRIC_TYPES = [
   { label: 'Title', value: 'title' },
   { label: 'Query', value: 'query' },
   { label: 'Referrer', value: 'referrer' },
+  { label: 'Referrer URL', value: 'referrerUrl' },
   { label: 'Channel', value: 'channel' },
   { label: 'Country', value: 'country' },
   { label: 'Region', value: 'region' },
