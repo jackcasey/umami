@@ -4,6 +4,7 @@ import {
   AppWindow,
   Cpu,
   Earth,
+  ExternalLink,
   Fingerprint,
   Globe,
   KeyRound,
@@ -99,7 +100,7 @@ export function WebsiteExpandedMenu({
           id: 'referrerUrl',
           label: t(labels.referrerUrl),
           path: updateParams({ view: 'referrerUrl' }),
-          icon: <Waypoints />,
+          icon: <ExternalLink />,
         },
         {
           id: 'channel',

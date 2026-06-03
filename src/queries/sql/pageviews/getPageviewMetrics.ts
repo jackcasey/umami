@@ -75,7 +75,7 @@ async function relationalQuery(
   if (type === 'fullPath') {
     selectColumn = `case when website_event.url_query != '' then website_event.url_path || '?' || website_event.url_query else website_event.url_path end`;
   } else if (type === 'referrerUrl') {
-    selectColumn = `case when website_event.referrer_query != '' then website_event.referrer_domain || website_event.referrer_path || '?' || website_event.referrer_query else website_event.referrer_domain || website_event.referrer_path end`;
+    selectColumn = `case when coalesce(website_event.referrer_query, '') != '' then coalesce(website_event.referrer_domain, '') || coalesce(website_event.referrer_path, '') || '?' || coalesce(website_event.referrer_query, '') else coalesce(website_event.referrer_domain, '') || coalesce(website_event.referrer_path, '') end`;
   }
 
   return rawQuery(
