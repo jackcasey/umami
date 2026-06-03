@@ -95,6 +95,7 @@ export function MetricLabel({ type, data }: MetricLabelProps) {
       );
 
     case 'fullPath':
+    case 'referrerUrl':
       return label || `(${t(labels.none)})`;
 
     case 'device':

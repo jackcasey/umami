@@ -2,6 +2,21 @@ import { expect, test } from '@playwright/test';
 import { addWebsite, deleteWebsite, loginPage } from './helpers';
 
 test.describe('Website tests', () => {
+  test('shows the Referrer URL metric tab on the dashboard', async ({ page, request }) => {
+    const auth = await loginPage(page, request);
+    const websiteId = await addWebsite(request, auth, 'Referrer URL test', 'refurl.com');
+
+    await page.goto(`/websites/${websiteId}`);
+
+    const tab = page.getByRole('tab', { name: 'Referrer URL' });
+    await expect(tab).toBeVisible();
+
+    await tab.click();
+    await expect(tab).toHaveAttribute('aria-selected', 'true');
+
+    await deleteWebsite(request, auth, websiteId);
+  });
+
   test('adds a website', async ({ page, request }) => {
     const auth = await loginPage(page, request);
 

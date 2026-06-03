@@ -71,9 +71,12 @@ async function relationalQuery(
     column = `x.${FILTER_COLUMNS[type] || type}`;
   }
 
-  const selectColumn = type === 'fullPath'
-    ? `case when website_event.url_query != '' then website_event.url_path || '?' || website_event.url_query else website_event.url_path end`
-    : column;
+  let selectColumn = column;
+  if (type === 'fullPath') {
+    selectColumn = `case when website_event.url_query != '' then website_event.url_path || '?' || website_event.url_query else website_event.url_path end`;
+  } else if (type === 'referrerUrl') {
+    selectColumn = `case when coalesce(website_event.referrer_query, '') != '' then coalesce(website_event.referrer_domain, '') || coalesce(website_event.referrer_path, '') || '?' || coalesce(website_event.referrer_query, '') else coalesce(website_event.referrer_domain, '') || coalesce(website_event.referrer_path, '') end`;
+  }
 
   return rawQuery(
     `
@@ -115,7 +118,11 @@ async function clickhouseQuery(
 
   let sql = '';
   let excludeDomain = '';
-  if (type === 'fullPath' || EVENT_COLUMNS.some(item => Object.keys(filters).includes(item))) {
+  if (
+    type === 'fullPath' ||
+    type === 'referrerUrl' ||
+    EVENT_COLUMNS.some(item => Object.keys(filters).includes(item))
+  ) {
     let entryExitQuery = '';
     let selectColumn = column;
 
@@ -141,6 +148,8 @@ async function clickhouseQuery(
       selectColumn = `x.url_path`;
     } else if (type === 'fullPath') {
       selectColumn = `if(url_query != '', concat(url_path, '?', url_query), url_path)`;
+    } else if (type === 'referrerUrl') {
+      selectColumn = `if(referrer_query != '', concat(referrer_domain, referrer_path, '?', referrer_query), concat(referrer_domain, referrer_path))`;
     }
 
     sql = `
@@ -209,6 +218,10 @@ async function clickhouseQuery(
 function getPageviewColumn(type: string) {
   if (type === 'fullPath') {
     return 'url_path';
+  }
+
+  if (type === 'referrerUrl') {
+    return 'referrer_domain';
   }
 
   return FILTER_COLUMNS[type] || type;

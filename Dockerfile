@@ -66,7 +66,8 @@ COPY --from=builder /app/generated ./generated
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 RUN rm -rf /app/node_modules
-COPY --from=deps /app/node_modules ./node_modules
+# chown so the nextjs user can write the prisma engine at runtime (migrate deploy)
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 USER nextjs
 
